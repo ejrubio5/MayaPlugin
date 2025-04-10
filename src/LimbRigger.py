@@ -64,7 +64,6 @@ class LimbRigger:
         mc.group(name, n = grpName)
         return name, grpName
 
-
     def GetObjectLocation(self, objectName):
         x, y, z = mc.xform(objectName, q=True, ws=True, t=True) #Quires the translation of the object in world space
         return MVector(x, y, z)
@@ -122,12 +121,12 @@ class LimbRigger:
         mc.expression(s=f"{endOrientConstraint}.{ikEndCtrl}W1 = {ikfkBlendAttr}")
 
         topGrpName = f"{self.root}_rig_grp"
-        mc.group([rootCtrlGrp, ikEndCtrlGrp, poleVectorCtrlGrp, ikfkBlendCtrlGrp], n=topGrpName)
+        mc.group([rootCtrlGrp, ikEndCtrlGrp, poleVectorCtrlGrp, ikfkBlendCtrlGrp], n = topGrpName)
         mc.parent(ikHandleName, ikEndCtrl)
 
         mc.setAttr(topGrpName+".overrideEnabled", 1)
         mc.setAttr(topGrpName+".overrideRGBColors", 1)
-        mc.setAttr(topGrpName+".overrideColorRGB", self.controllerColor[0], self.controllerColor[1], self.controllerColor[2], type="double3")
+        mc.setAttr(topGrpName+".overrideColorRGB", self.controllerColor[0], self.controllerColor[1], self.controllerColor[2], type = "double3")
 
 class ColorPicker(QWidget):
     colorChanged = Signal(QColor)
