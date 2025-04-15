@@ -6,7 +6,7 @@ import maya.OpenMayaUI as omui
 import maya.mel as mel
 import shiboken2
 
-def GetMayaMainWindow() -> QMainWindow:
+def GetMayaMainWindow()->QMainWindow:
     mainWindow = omui.MQtUtil.mainWindow()
     return shiboken2.wrapInstance(int(mainWindow), QMainWindow)
 
@@ -16,13 +16,13 @@ def DeleteWidgetWithName(name):
 
 class MayaWindow(QWidget):
     def __init__(self):
-        super().__init__(parent=GetMayaMainWindow())
+        super().__init__(parent = GetMayaMainWindow())
         DeleteWidgetWithName(self.GetWidgetUniqueName())
         self.setWindowFlags(Qt.WindowType.Window)
         self.setObjectName(self.GetWidgetUniqueName())
-    
+
     def GetWidgetUniqueName(self):
-        return "lkansdlnwoasjvnsopavjnop"
+        return "dsfsdfsdfisdfhsdlfie34234hdsi34hsdfi"
 
 import maya.cmds as mc
 class LimbRigger:
@@ -31,8 +31,9 @@ class LimbRigger:
         self.mid = ""
         self.end = ""
         self.controllerSize = 5
-        self.controllerColor = [0, 0, 0]
-    
+        self.controllerColor = [0,0,0]
+        self.createdControllers = []
+
     def FindJointsBasedOnSelection(self):
         try:
             self.root = mc.ls(sl=True, type="joint")[0]
@@ -41,43 +42,54 @@ class LimbRigger:
         except Exception as e:
             raise Exception("Wrong Selection, please select the first joint of the limb!")
 
-    def CreateFKControllerForJoints(self, jntName):
+    def CreateFKControllerForJoint(self, jntName):
         ctrlName = "ac_l_fk_" + jntName
         ctrlGrpName = ctrlName + "_grp"
-        mc.circle(name=ctrlName, radius=self.controllerSize, normal=(1, 0, 0))
+        mc.circle(name = ctrlName, radius = self.controllerSize, normal = (1,0,0))
         mc.group(ctrlName, n=ctrlGrpName)
         mc.matchTransform(ctrlGrpName, jntName)
         mc.orientConstraint(ctrlName, jntName)
+        self.createdControllers.append(ctrlName)
         return ctrlName, ctrlGrpName
-    
+
     def CreateBoxController(self, name):
-        mel.eval(f"curve -n {name} -d 1 -p 0.5 0.5 0.5 -p 0.5 0.5 -0.5 -p -0.5 0.5 -0.5 -p -0.5 0.5 0.5 -p -0.5 -0.5 0.5 -p 0.5 -0.5 0.5 -p 0.5 -0.5 -0.5 -p -0.5 -0.5 -0.5 -p -0.5 0.5 -0.5 -p 0.5 0.5 -0.5 -p 0.5 -0.5 -0.5 -p 0.5 -0.5 0.5 -p 0.5 0.5 0.5 -p -0.5 0.5 0.5 -p -0.5 -0.5 0.5 -p -0.5 -0.5 -0.5 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15")
+        mel.eval(f"curve -n {name} -d 1 -p 0.5 0.5 0.5 -p 0.5 0.5 -0.5 -p -0.5 0.5 -0.5 -p -0.5 0.5 0.5 -p 0.5 0.5 0.5 -p 0.5 -0.5 0.5 -p -0.5 -0.5 0.5 -p -0.5 0.5 0.5 -p -0.5 -0.5 0.5 -p -0.5 -0.5 -0.5 -p -0.5 0.5 -0.5 -p -0.5 -0.5 -0.5 -p 0.5 -0.5 -0.5 -p 0.5 0.5 -0.5 -p 0.5 -0.5 -0.5 -p 0.5 -0.5 0.5 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15 ;")
         mc.scale(self.controllerSize, self.controllerSize, self.controllerSize, name)
-        mc.makeIdentity(name, apply=True) # Freezes transformations
+        mc.makeIdentity(name, apply=True) # freeze transformation
         grpName = name + "_grp"
         mc.group(name, n = grpName)
-        return name, grpName
-    
-    def CreatePlusController(self, name):
-        mel.eval(f"curve -n {name} -d 1 -p -1 -3 0 -p 1 -3 0 -p 1 -1 0 -p 3 -1 0 -p 3 1 0 -p 1 1 0 -p 1 3 0 -p -1 3 0 -p -1 1 0 -p -3 1 0 -p -3 -1 0 -p -1 -1 0 -p -1 -3 0 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12")
-        grpName = name + "_grp"
-        mc.group(name, n = grpName)
+        self.createdControllers.append(name)
         return name, grpName
 
+    def CreatePlusController(self, name):
+        mel.eval(f"curve -n {name} -d 1 -p 1 1 0 -p 1 3 0 -p -1 3 0 -p -1 1 0 -p -3 1 0 -p -3 -1 0 -p -1 -1 0 -p -1 -3 0 -p 1 -3 0 -p 1 -1 0 -p 3 -1 0 -p 3 1 0 -p 1 1 0 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 ;")
+        grpName = name + "_grp"
+        mc.group(name, n = grpName)
+        self.createdControllers.append(name)
+        return name, grpName
+
+
     def GetObjectLocation(self, objectName):
-        x, y, z = mc.xform(objectName, q=True, ws=True, t=True) #Quires the translation of the object in world space
+        x, y, z = mc.xform(objectName, q=True, ws=True, t=True) # quires the tralsation of the object in world space
         return MVector(x, y, z)
 
     def PrintMVector(self, vector):
         print(f"<{vector.x}, {vector.y}, {vector.z}>")
 
+    def ChangeControllerColors(self, rgbColor):
+        for ctrl in self.createdControllers:
+            if mc.objExists(ctrl):
+                mc.setAttr(ctrl + ".overrideEnabled", 1)
+                mc.setAttr(ctrl + ".overrideRGBColors", 1)
+                mc.setAttr(ctrl + ".overrideColorRGB", rgbColor[0], rgbColor[1], rgbColor[2], type="double3")
+
     def RigLimb(self):
-        rootCtrl, rootCtrlGrp = self.CreateFKControllerForJoints(self.root)
-        midCtrl, midCtrlGrp = self.CreateFKControllerForJoints(self.mid)
-        endCtrl, endtCtrlGrp = self.CreateFKControllerForJoints(self.end)
+        rootCtrl, rootCtrlGrp = self.CreateFKControllerForJoint(self.root)
+        midCtrl, midCtrlGrp = self.CreateFKControllerForJoint(self.mid)
+        endCtrl, endCtrlGrp = self.CreateFKControllerForJoint(self.end)
 
         mc.parent(midCtrlGrp, rootCtrl)
-        mc.parent(endtCtrlGrp, midCtrl)
+        mc.parent(endCtrlGrp, midCtrl)
 
         ikEndCtrl = "ac_ik_" + self.end
         ikEndCtrl, ikEndCtrlGrp = self.CreateBoxController(ikEndCtrl)
@@ -92,7 +104,7 @@ class LimbRigger:
 
         poleVectorLocationVals = mc.getAttr(ikHandleName + ".poleVector")[0]
         poleVector = MVector(poleVectorLocationVals[0], poleVectorLocationVals[1], poleVectorLocationVals[2])
-        poleVector.normal()
+        poleVector.normalize()
 
         endJntLoc = self.GetObjectLocation(self.end)
         rootToEndVector = endJntLoc - rootJntLoc
@@ -108,25 +120,25 @@ class LimbRigger:
 
         ikfkBlendCtrl = "ac_ikfk_blend_" + self.root
         ikfkBlendCtrl, ikfkBlendCtrlGrp = self.CreatePlusController(ikfkBlendCtrl)
-        mc.setAttr(ikfkBlendCtrl+".t", rootJntLoc.x*2, rootJntLoc.y, rootJntLoc.z*2, typ="double3")
+        mc.setAttr(ikfkBlendCtrlGrp+".t", rootJntLoc.x*2, rootJntLoc.y, rootJntLoc.z*2, typ="double3")
 
         ikfkBlendAttrName = "ikfkBlend"
-        mc.addAttr(ikEndCtrlGrp, ln=ikfkBlendAttrName, min = 0, mas = 1, k=True)
+        mc.addAttr(ikfkBlendCtrl, ln=ikfkBlendAttrName, min = 0, max = 1, k=True)
         ikfkBlendAttr = ikfkBlendCtrl + "." + ikfkBlendAttrName
 
         mc.expression(s=f"{ikHandleName}.ikBlend={ikfkBlendAttr}")
-        mc.expression(s=f"{ikEndCtrl}.v={poleVectorCtrlGrp}.v={ikfkBlendAttr}")
+        mc.expression(s=f"{ikEndCtrlGrp}.v={poleVectorCtrlGrp}.v={ikfkBlendAttr}")
         mc.expression(s=f"{rootCtrlGrp}.v=1-{ikfkBlendAttr}")
         mc.expression(s=f"{endOrientConstraint}.{endCtrl}W0 = 1-{ikfkBlendAttr}")
         mc.expression(s=f"{endOrientConstraint}.{ikEndCtrl}W1 = {ikfkBlendAttr}")
 
         topGrpName = f"{self.root}_rig_grp"
-        mc.group([rootCtrlGrp, ikEndCtrlGrp, poleVectorCtrlGrp, ikfkBlendCtrlGrp], n = topGrpName)
+        mc.group([rootCtrlGrp, ikEndCtrlGrp, poleVectorCtrlGrp, ikfkBlendCtrlGrp], n=topGrpName)
         mc.parent(ikHandleName, ikEndCtrl)
 
         mc.setAttr(topGrpName+".overrideEnabled", 1)
         mc.setAttr(topGrpName+".overrideRGBColors", 1)
-        mc.setAttr(topGrpName+".overrideColorRGB", self.controllerColor[0], self.controllerColor[1], self.controllerColor[2], type = "double3")
+        mc.setAttr(topGrpName+".overrideColorRGB", self.controllerColor[0], self.controllerColor[1], self.controllerColor[2], type="double3")
 
 class ColorPicker(QWidget):
     colorChanged = Signal(QColor)
@@ -160,7 +172,7 @@ class LimbRiggerWidget(MayaWindow):
 
         self.jntsListLineEdit = QLineEdit()
         self.masterLayout.addWidget(self.jntsListLineEdit)
-        self.jntsListLineEdit.setEnabled(False) 
+        self.jntsListLineEdit.setEnabled(False)
 
         autoFindJntBtn = QPushButton("Auto Find")
         autoFindJntBtn.clicked.connect(self.AutoFindJntBtnClicked)
@@ -168,14 +180,14 @@ class LimbRiggerWidget(MayaWindow):
 
         ctrlSizeSlider = QSlider()
         ctrlSizeSlider.setOrientation(Qt.Horizontal)
-        ctrlSizeSlider.setRange(1,30)
+        ctrlSizeSlider.setRange(1, 30)
         ctrlSizeSlider.setValue(self.rigger.controllerSize)
         self.ctrlSizeLabel = QLabel(f"{self.rigger.controllerSize}")
         ctrlSizeSlider.valueChanged.connect(self.CtrlSizeSliderChanged)
 
         ctrlSizeLayout = QHBoxLayout()
-        self.masterLayout.addWidget(ctrlSizeSlider)
-        self.masterLayout.addWidget(self.ctrlSizeLabel)
+        ctrlSizeLayout.addWidget(ctrlSizeSlider)
+        ctrlSizeLayout.addWidget(self.ctrlSizeLabel)
         self.masterLayout.addLayout(ctrlSizeLayout)
 
         colorPicker = ColorPicker()
@@ -183,13 +195,20 @@ class LimbRiggerWidget(MayaWindow):
         self.masterLayout.addWidget(colorPicker)
 
         rigLimbBtn = QPushButton("Rig Limb")
-        rigLimbBtn.clicked.connect(lambda: self.rigger.RigLimb())
+        rigLimbBtn.clicked.connect(lambda : self.rigger.RigLimb())
         self.masterLayout.addWidget(rigLimbBtn)
+
+        changeColorBtn = QPushButton("Change Controller Color")
+        changeColorBtn.clicked.connect(self.ChangeControllerColorsClicked)
+        self.masterLayout.addWidget(changeColorBtn)
 
     def ColorPickerChanged(self, newColor: QColor):
         self.rigger.controllerColor[0] = newColor.redF()
         self.rigger.controllerColor[1] = newColor.greenF()
         self.rigger.controllerColor[2] = newColor.blueF()
+
+    def ChangeControllerColorsClicked(self):
+        self.rigger.ChangeControllerColors(self.rigger.controllerColor)
 
     def CtrlSizeSliderChanged(self, newValue):
         self.ctrlSizeLabel.setText(f"{newValue}")
@@ -201,6 +220,7 @@ class LimbRiggerWidget(MayaWindow):
             self.jntsListLineEdit.setText(f"{self.rigger.root},{self.rigger.mid},{self.rigger.end}")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"{e}")
+
 
 limbRiggerWidget = LimbRiggerWidget()
 limbRiggerWidget.show()
