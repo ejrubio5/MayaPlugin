@@ -22,7 +22,7 @@ class MayaWindow(QWidget):
         self.setObjectName(self.GetWidgetUniqueName())
 
     def GetWidgetUniqueName(self):
-        return "dsfsdfsdfisdfhsdlfie34234hdsi34hsdfi"
+        return "akjsboecnalcsvakajgvflawha"
 
 import maya.cmds as mc
 class LimbRigger:
