@@ -31,7 +31,6 @@ class LimbRigger:
             raise Exception("Wrong Selection, please select the first joint of the limb!")
 
     def CreateFKControllerForJoint(self, jntName):
-    def CreateFKControllerForJoint(self, jntName):
         ctrlName = "ac_l_fk_" + jntName
         ctrlGrpName = ctrlName + "_grp"
         mc.circle(name = ctrlName, radius = self.controllerSize, normal = (1,0,0))
