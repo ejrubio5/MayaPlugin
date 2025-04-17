@@ -39,7 +39,7 @@ def GetAllConnectionsIn(obj, nextFunc, filter = None):
         nexts = nextFunc(nexts)
         if nexts:
             nexts = [x for x in nexts if x not in allFound]
-    
+
     if not filter:
         return list(allFound)
     
@@ -47,6 +47,8 @@ def GetAllConnectionsIn(obj, nextFunc, filter = None):
     for found in allFound:
         if filter(found):
             filtered.append(found)
+
+    return filtered
 
 def GetMayaMainWindow()->QMainWindow:
     mainWindow = omui.MQtUtil.mainWindow()

@@ -1,5 +1,5 @@
 import sys
 
-prjPath = "C:/Users/EJ/Documents/MayaPlugins/src"
+prjPath = "D:/profile redirect/ejrubio/Documents/MayaPlugins/src"
 if prjPath not in sys.path:
     sys.path.append(prjPath)
