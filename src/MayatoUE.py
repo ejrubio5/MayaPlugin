@@ -1,5 +1,5 @@
 from MayaUtils import *
-from PySide2.QtGui import QRegExpValidator
+from PySide2.QtGui import QIntValidator, QRegExpValidator
 from PySide2.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox, QPushButton, QVBoxLayout
 import maya.cmds as mc
 
@@ -84,10 +84,32 @@ class AnimClipWidget(MayaWindow):
         self.masterLayout.addWidget(subfixLabel)
 
         subfixLineEdit = QLineEdit()
-        subfixLineEdit.setValidator(QRegExpValidator("[a-zA-Z0-9_]+"))
+        subfixLineEdit.setValidator(QRegExpValidator("\w+"))
         subfixLineEdit.setText(self.animClip.subfix)
         subfixLineEdit.textChanged.connect(self.SubfixTextChanged)
         self.masterLayout.addWidget(subfixLineEdit)
+
+        minFrameLabel = QLabel("Min: ")
+        self.masterLayout.addWidget(minFrameLabel)
+        minFrameLineEdit = QLineEdit()
+        minFrameLineEdit.setValidator(QIntValidator())
+        minFrameLineEdit.setText(str(int(self.animClip.frameMin)))
+        minFrameLineEdit.textChanged.connect(self.MinFrameChanged)
+        self.masterLayout.addWidget(minFrameLineEdit)
+
+        maxFrameLabel = QLabel("Max: ")
+        self.masterLayout.addWidget(maxFrameLabel)
+        maxFrameLineEdit = QLineEdit()
+        maxFrameLineEdit.setValidator(QIntValidator())
+        maxFrameLineEdit.setText(str(int(self.animClip.frameMax)))
+        maxFrameLineEdit.textChanged.connect(self.MaxFrameChanged)
+        self.masterLayout.addWidget(maxFrameLineEdit)
+
+    def MaxFrameChanged (self, newVal):
+        self.animClip.frameMax = int(newVal)
+    
+    def MinFrameChanged (self, newVal):
+        self.animClip.frameMin = int(newVal)
 
     def SubfixTextChanged(self, newText):
         self.animClip.subfix = newText
