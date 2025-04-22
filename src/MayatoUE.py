@@ -1,7 +1,15 @@
 from MayaUtils import *
-from PySide2.QtWidgets import QVBoxLayout
+from PySide2.QtWidgets import QLineEdit, QMessageBox, QPushButton, QVBoxLayout
 import maya.cmds as mc
 
+def TryAction(actionFunc):
+    def wrapper(*args, **kwargs):
+        try:
+            actionFunc(*args, **kwargs)
+        except Exception as e:
+            QMessageBox().critical(None, "Error!", f"{e}")
+    
+    return wrapper
 
 class AnimClip:
     def __init__(self):
@@ -19,14 +27,62 @@ class MayaToUE:
         self.fileName = ""
         self.saveDir = ""
 
+    def AddRootJoint(self):
+        if not self.rootJnt:
+            raise Exception("No root joint assigned! Please set the root joint of your rig first!")
+        
+        if mc.objExists(self.rootJnt):
+            currentRootPos = mc.xform(self.rootJnt, q=True, ws=True, t=False)
+            if currentRootPos[0] == 0 and currentRootPos[1] == 0 and currentRootPos[2] == 0:
+                raise Exception("Current root joint is at origin already! No need to make a new one!")
+        
+        mc.select(cl=True)
+        rootJntName = self.rootJnt + "_root"
+        mc.joint(n=rootJntName)
+        mc.parent(self.rootJnt, rootJntName)
+        self.rootJnt = rootJntName
+
+    def SetSelectedJointAsRoot(self):
+        selection = mc.ls(sl=True, type="joint")
+        if not selection:
+            raise Exception("Wrong Selection! Please select the root joint of your rig!")
+        
+        self.rootJnt = selection[0]
+
+
 class MayaToUEWidget(MayaWindow):
     def GetWidgetUniqueName(self):
         return "MayaToUEWidgetER4172025407"
     
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Maya to UW")
+        self.mayaToUE = MayaToUE()
+
+        self.setWindowTitle("Maya to UE")
         self.masterLayout = QVBoxLayout()
         self.setLayout(self.masterLayout)
+
+        self.rootJntText = QLineEdit()
+        self.rootJntText.setEnabled(False)
+        self.masterLayout.addWidget(self.rootJntText)
+
+        setSelectedAsRootJntBtn = QPushButton("Set Root Joint")
+        setSelectedAsRootJntBtn.clicked.connect(self.SetSelectedAsRootJntBtnClicked)
+        self.masterLayout.addWidget(setSelectedAsRootJntBtn)
+
+        addRootJntBtn = QPushButton("Add Root Joint")
+        addRootJntBtn.clicked.connect(self.AddRootJntBtnClicked)
+        self.masterLayout.addWidget(addRootJntBtn)
+
+    @TryAction
+    def AddRootJntBtnClicked(self):
+        self.mayaToUE.AddRootJoint()
+        self.rootJntText.setText(self.mayaToUE.rootJnt)
+
+    @TryAction
+    def SetSelectedAsRootJntBtnClicked(self):
+            self.mayaToUE.SetSelectedJointAsRoot()
+            self.rootJntText.setText(self.mayaToUE.rootJnt)
+
 
 MayaToUEWidget().show()
