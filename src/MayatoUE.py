@@ -1,5 +1,6 @@
 from MayaUtils import *
-from PySide2.QtWidgets import QLineEdit, QMessageBox, QPushButton, QVBoxLayout
+from PySide2.QtGui import QRegExpValidator
+from PySide2.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox, QPushButton, QVBoxLayout
 import maya.cmds as mc
 
 def TryAction(actionFunc):
@@ -27,12 +28,30 @@ class MayaToUE:
         self.fileName = ""
         self.saveDir = ""
 
+    def AddSelectedMeshes(self):
+        selection = mc.ls(sl=True)
+
+        if not selection:
+            raise Exception("No mesh selected! Please select all the meshes of your rig!")
+        
+        meshes = []
+        for sel in selection:
+            if IsMesh(sel):
+                meshes.append(sel)
+
+        if len(meshes) == 0:
+            raise Exception("No mesh selected! Please select all the meshes of your rig!")
+        
+        self.models = meshes
+
+
+
     def AddRootJoint(self):
         if not self.rootJnt:
             raise Exception("No root joint assigned! Please set the root joint of your rig first!")
         
         if mc.objExists(self.rootJnt):
-            currentRootPos = mc.xform(self.rootJnt, q=True, ws=True, t=False)
+            currentRootPos = mc.xform(self.rootJnt, q=True, ws=True, t=True)
             if currentRootPos[0] == 0 and currentRootPos[1] == 0 and currentRootPos[2] == 0:
                 raise Exception("Current root joint is at origin already! No need to make a new one!")
         
@@ -48,6 +67,33 @@ class MayaToUE:
             raise Exception("Wrong Selection! Please select the root joint of your rig!")
         
         self.rootJnt = selection[0]
+
+class AnimClipWidget(MayaWindow):
+    def __init__(self, animClip: AnimClip):
+        super().__init__()
+        self.animClip = animClip
+        self.masterLayout = QHBoxLayout()
+        self.setLayout(self.masterLayout)
+
+        shouldExportCheckbox = QCheckBox()
+        shouldExportCheckbox.setChecked(self.animClip.shouldExport)
+        self.masterLayout.addWidget(shouldExportCheckbox)
+        shouldExportCheckbox.toggled.connect(self.ShouldExportCheckboxToggled)
+
+        subfixLabel = QLabel("Subfix: ")
+        self.masterLayout.addWidget(subfixLabel)
+
+        subfixLineEdit = QLineEdit()
+        subfixLineEdit.setValidator(QRegExpValidator("[a-zA-Z0-9_]+"))
+        subfixLineEdit.setText(self.animClip.subfix)
+        subfixLineEdit.textChanged.connect(self.SubfixTextChanged)
+        self.masterLayout.addWidget(subfixLineEdit)
+
+    def SubfixTextChanged(self, newText):
+        self.animClip.subfix = newText
+
+    def ShouldExportCheckboxToggled(self):
+        self.animClip.shouldExport = not self.animClip.shouldExport
 
 
 class MayaToUEWidget(MayaWindow):
@@ -74,6 +120,20 @@ class MayaToUEWidget(MayaWindow):
         addRootJntBtn.clicked.connect(self.AddRootJntBtnClicked)
         self.masterLayout.addWidget(addRootJntBtn)
 
+        self.meshList = QListWidget()
+        self.masterLayout.addWidget(self.meshList)
+        self.meshList.setMaximumHeight(100)
+        
+        addMeshesBtn = QPushButton("Add Meshes")
+        addMeshesBtn.clicked.connect(self.AddMeshesBtnClicked)
+        self.masterLayout.addWidget(addMeshesBtn)
+
+    @TryAction
+    def AddMeshesBtnClicked(self):
+        self.mayaToUE.AddSelectedMeshes()
+        self.meshList.clear()
+        self.meshList.addItems(self.mayaToUE.models)
+
     @TryAction
     def AddRootJntBtnClicked(self):
         self.mayaToUE.AddRootJoint()
@@ -85,4 +145,5 @@ class MayaToUEWidget(MayaWindow):
             self.rootJntText.setText(self.mayaToUE.rootJnt)
 
 
-MayaToUEWidget().show()
+# MayaToUEWidget().show()
+AnimClipWidget( AnimClip()).show()
