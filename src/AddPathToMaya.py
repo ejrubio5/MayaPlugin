@@ -6,6 +6,5 @@ moduleDir = "D:/profile redirect/ejrubio/Documents"
 if prjPath not in sys.path:
     sys.path.append(prjPath)
 
-if prjPath not in sys.path:
+if moduleDir not in sys.path:
     sys.path.append(moduleDir)
-
